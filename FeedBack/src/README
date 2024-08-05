@@ -205,3 +205,182 @@ public class CalificaciónDAO {
 ```
 
 Con estos pasos, tendrás la base para desarrollar "Riwi Academy". Puedes ampliar los métodos para cubrir todos los criterios de aceptación y funcionalidades requeridas en las historias de usuario.
+
+
+
+
+1. Controladores
+
+Controlador para Estudianteimport java.util.Scanner;
+
+public class EstudianteController {
+    private EstudianteDAO estudianteDAO;
+    private Scanner scanner;
+
+    public EstudianteController() {
+        estudianteDAO = new EstudianteDAO();
+        scanner = new Scanner(System.in);
+    }
+
+    public void crearEstudiante() {
+        System.out.print("Ingrese el nombre: ");
+        String nombre = scanner.nextLine();
+        System.out.print("Ingrese el apellido: ");
+        String apellido = scanner.nextLine();
+        System.out.print("Ingrese el email: ");
+        String email = scanner.nextLine();
+
+        try {
+            estudianteDAO.crearEstudiante(nombre, apellido, email);
+            System.out.println("Estudiante creado exitosamente.");
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("Error al crear el estudiante.");
+        }
+    }
+
+    // Métodos para editar, listar y buscar estudiantes...
+}Controlador para Cursoimport java.util.Scanner;
+
+public class CursoController {
+    private CursoDAO cursoDAO;
+    private Scanner scanner;
+
+    public CursoController() {
+        cursoDAO = new CursoDAO();
+        scanner = new Scanner(System.in);
+    }
+
+    public void crearCurso() {
+        System.out.print("Ingrese el nombre del curso: ");
+        String nombre = scanner.nextLine();
+        System.out.print("Ingrese la descripción del curso: ");
+        String descripcion = scanner.nextLine();
+
+        try {
+            cursoDAO.crearCurso(nombre, descripcion);
+            System.out.println("Curso creado exitosamente.");
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("Error al crear el curso.");
+        }
+    }
+
+    // Métodos para editar, listar y eliminar cursos...
+}Controlador para Inscripciónimport java.util.Scanner;
+
+public class InscripciónController {
+    private InscripciónDAO inscripciónDAO;
+    private Scanner scanner;
+
+    public InscripciónController() {
+        inscripciónDAO = new InscripciónDAO();
+        scanner = new Scanner(System.in);
+    }
+
+    public void crearInscripción() {
+        System.out.print("Ingrese el ID del estudiante: ");
+        int estudianteID = scanner.nextInt();
+        System.out.print("Ingrese el ID del curso: ");
+        int cursoID = scanner.nextInt();
+
+        try {
+            inscripciónDAO.crearInscripción(estudianteID, cursoID);
+            System.out.println("Inscripción creada exitosamente.");
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("Error al crear la inscripción.");
+        }
+    }
+
+    // Métodos para editar y eliminar inscripciones...
+}Controlador para Calificaciónimport java.util.Scanner;
+
+public class CalificaciónController {
+    private CalificaciónDAO calificaciónDAO;
+    private Scanner scanner;
+
+    public CalificaciónController() {
+        calificaciónDAO = new CalificaciónDAO();
+        scanner = new Scanner(System.in);
+    }
+
+    public void crearCalificación() {
+        System.out.print("Ingrese el ID de la inscripción: ");
+        int inscripciónID = scanner.nextInt();
+        System.out.print("Ingrese la nota (0-100): ");
+        int nota = scanner.nextInt();
+        scanner.nextLine();  // Consumir la nueva línea
+        System.out.print("Ingrese la descripción de la calificación: ");
+        String descripción = scanner.nextLine();
+
+        try {
+            calificaciónDAO.crearCalificación(inscripciónID, nota, descripción);
+            System.out.println("Calificación creada exitosamente.");
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("Error al crear la calificación.");
+        }
+    }
+
+    // Métodos para editar calificaciones...
+}2. Interface para Doble Clave ForáneaPara manejar entidades con doble clave foránea, podemos usar una interfaz. Aquí un ejemplo simple.public interface IDobleClaveForanea {
+    int getEstudianteID();
+    int getCursoID();
+}Implementamos esta interfaz en Inscripción:public class Inscripción implements IDobleClaveForanea {
+    private int estudianteID;
+    private int cursoID;
+
+    // Constructor, getters y setters...
+
+    @Override
+    public int getEstudianteID() {
+        return estudianteID;
+    }
+
+    @Override
+    public int getCursoID() {
+        return cursoID;
+    }
+}3. Archivo Main para Ejecutar Todoimport java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        EstudianteController estudianteController = new EstudianteController();
+        CursoController cursoController = new CursoController();
+        InscripciónController inscripciónController = new InscripciónController();
+        CalificaciónController calificaciónController = new CalificaciónController();
+
+        while (true) {
+            System.out.println("1. Crear Estudiante");
+            System.out.println("2. Crear Curso");
+            System.out.println("3. Crear Inscripción");
+            System.out.println("4. Crear Calificación");
+            System.out.println("5. Salir");
+            System.out.print("Seleccione una opción: ");
+            int opcion = scanner.nextInt();
+            scanner.nextLine(); // Consumir la nueva línea
+
+            switch (opcion) {
+                case 1:
+                    estudianteController.crearEstudiante();
+                    break;
+                case 2:
+                    cursoController.crearCurso();
+                    break;
+                case 3:
+                    inscripciónController.crearInscripción();
+                    break;
+                case 4:
+                    calificaciónController.crearCalificación();
+                    break;
+                case 5:
+                    System.out.println("Saliendo...");
+                    return;
+                default:
+                    System.out.println("Opción no válida. Intente nuevamente.");
+            }
+        }
+    }
+}
