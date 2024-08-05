@@ -530,3 +530,66 @@ public class CalificaciónController {
     private CalificaciónDAO calificaciónDAO;
     private Scanner scanner;
 
+
+
+
+2. Interface para Doble Clave ForáneaPara manejar entidades con doble clave foránea, podemos usar una interfaz. Aquí un ejemplo simple.public interface IDobleClaveForanea {
+    int getEstudianteID();
+    int getCursoID();
+}Implementamos esta interfaz en Inscripción:public class Inscripción implements IDobleClaveForanea {
+    private int estudianteID;
+    private int cursoID;
+
+    // Constructor, getters y setters...
+
+    @Override
+    public int getEstudianteID() {
+        return estudianteID;
+    }
+
+    @Override
+    public int getCursoID() {
+        return cursoID;
+    }
+}3. Archivo Main para Ejecutar Todoimport java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        EstudianteController estudianteController = new EstudianteController();
+        CursoController cursoController = new CursoController();
+        InscripciónController inscripciónController = new InscripciónController();
+        CalificaciónController calificaciónController = new CalificaciónController();
+
+        while (true) {
+            System.out.println("1. Crear Estudiante");
+            System.out.println("2. Crear Curso");
+            System.out.println("3. Crear Inscripción");
+            System.out.println("4. Crear Calificación");
+            System.out.println("5. Salir");
+            System.out.print("Seleccione una opción: ");
+            int opcion = scanner.nextInt();
+            scanner.nextLine(); // Consumir la nueva línea
+
+            switch (opcion) {
+                case 1:
+                    estudianteController.crearEstudiante();
+                    break;
+                case 2:
+                    cursoController.crearCurso();
+                    break;
+                case 3:
+                    inscripciónController.crearInscripción();
+                    break;
+                case 4:
+                    calificaciónController.crearCalificación();
+                    break;
+                case 5:
+                    System.out.println("Saliendo...");
+                    return;
+                default:
+                    System.out.println("Opción no válida. Intente nuevamente.");
+            }
+        }
+    }
+}
