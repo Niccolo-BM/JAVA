@@ -207,11 +207,14 @@ public class CalificaciónDAO {
 Con estos pasos, tendrás la base para desarrollar "Riwi Academy". Puedes ampliar los métodos para cubrir todos los criterios de aceptación y funcionalidades requeridas en las historias de usuario.
 
 
+Claro, a continuación se detallan los métodos para cada controlador, incluyendo las funcionalidades de crear, actualizar, consultar, eliminar y realizar consultas generales.
 
+### 1. EstudianteController
 
-1. Controladores
-
-Controlador para Estudianteimport java.util.Scanner;
+```java
+import java.sql.SQLException;
+import java.util.List;
+import java.util.Scanner;
 
 public class EstudianteController {
     private EstudianteDAO estudianteDAO;
@@ -239,8 +242,91 @@ public class EstudianteController {
         }
     }
 
-    // Métodos para editar, listar y buscar estudiantes...
-}Controlador para Cursoimport java.util.Scanner;
+    public void actualizarEstudiante() {
+        System.out.print("Ingrese el ID del estudiante a actualizar: ");
+        int id = scanner.nextInt();
+        scanner.nextLine(); // Consumir la nueva línea
+        System.out.print("Ingrese el nuevo nombre (dejar vacío para no cambiar): ");
+        String nombre = scanner.nextLine();
+        System.out.print("Ingrese el nuevo apellido (dejar vacío para no cambiar): ");
+        String apellido = scanner.nextLine();
+        System.out.print("Ingrese el nuevo email (dejar vacío para no cambiar): ");
+        String email = scanner.nextLine();
+
+        try {
+            estudianteDAO.actualizarEstudiante(id, nombre, apellido, email);
+            System.out.println("Estudiante actualizado exitosamente.");
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("Error al actualizar el estudiante.");
+        }
+    }
+
+    public void eliminarEstudiante() {
+        System.out.print("Ingrese el ID del estudiante a eliminar: ");
+        int id = scanner.nextInt();
+
+        try {
+            estudianteDAO.eliminarEstudiante(id);
+            System.out.println("Estudiante eliminado exitosamente.");
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("Error al eliminar el estudiante.");
+        }
+    }
+
+    public void listarEstudiantesActivos() {
+        try {
+            List<Estudiante> estudiantes = estudianteDAO.listarEstudiantesActivos();
+            estudiantes.forEach(System.out::println);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("Error al listar los estudiantes.");
+        }
+    }
+
+    public void buscarEstudiantePorID() {
+        System.out.print("Ingrese el ID del estudiante: ");
+        int id = scanner.nextInt();
+
+        try {
+            Estudiante estudiante = estudianteDAO.buscarEstudiantePorID(id);
+            if (estudiante != null) {
+                System.out.println(estudiante);
+            } else {
+                System.out.println("Estudiante no encontrado.");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("Error al buscar el estudiante.");
+        }
+    }
+
+    public void buscarEstudiantePorEmail() {
+        System.out.print("Ingrese el email del estudiante: ");
+        String email = scanner.nextLine();
+
+        try {
+            Estudiante estudiante = estudianteDAO.buscarEstudiantePorEmail(email);
+            if (estudiante != null) {
+                System.out.println(estudiante);
+            } else {
+                System.out.println("Estudiante no encontrado.");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("Error al buscar el estudiante.");
+        }
+    }
+}
+```
+
+### 2. CursoController
+
+```java
+import java.sql.SQLException;
+import java.util.List;
+import java.util.Scanner;
 
 public class CursoController {
     private CursoDAO cursoDAO;
@@ -266,8 +352,89 @@ public class CursoController {
         }
     }
 
-    // Métodos para editar, listar y eliminar cursos...
-}Controlador para Inscripciónimport java.util.Scanner;
+    public void actualizarCurso() {
+        System.out.print("Ingrese el ID del curso a actualizar: ");
+        int id = scanner.nextInt();
+        scanner.nextLine(); // Consumir la nueva línea
+        System.out.print("Ingrese el nuevo nombre (dejar vacío para no cambiar): ");
+        String nombre = scanner.nextLine();
+        System.out.print("Ingrese la nueva descripción (dejar vacío para no cambiar): ");
+        String descripcion = scanner.nextLine();
+
+        try {
+            cursoDAO.actualizarCurso(id, nombre, descripcion);
+            System.out.println("Curso actualizado exitosamente.");
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("Error al actualizar el curso.");
+        }
+    }
+
+    public void eliminarCurso() {
+        System.out.print("Ingrese el ID del curso a eliminar: ");
+        int id = scanner.nextInt();
+
+        try {
+            cursoDAO.eliminarCurso(id);
+            System.out.println("Curso eliminado exitosamente.");
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("Error al eliminar el curso.");
+        }
+    }
+
+    public void listarCursos() {
+        try {
+            List<Curso> cursos = cursoDAO.listarCursos();
+            cursos.forEach(System.out::println);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("Error al listar los cursos.");
+        }
+    }
+
+    public void buscarCursoPorID() {
+        System.out.print("Ingrese el ID del curso: ");
+        int id = scanner.nextInt();
+
+        try {
+            Curso curso = cursoDAO.buscarCursoPorID(id);
+            if (curso != null) {
+                System.out.println(curso);
+            } else {
+                System.out.println("Curso no encontrado.");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("Error al buscar el curso.");
+        }
+    }
+
+    public void buscarCursoPorNombre() {
+        System.out.print("Ingrese el nombre del curso: ");
+        String nombre = scanner.nextLine();
+
+        try {
+            Curso curso = cursoDAO.buscarCursoPorNombre(nombre);
+            if (curso != null) {
+                System.out.println(curso);
+            } else {
+                System.out.println("Curso no encontrado.");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("Error al buscar el curso.");
+        }
+    }
+}
+```
+
+### 3. InscripciónController
+
+```java
+import java.sql.SQLException;
+import java.util.List;
+import java.util.Scanner;
 
 public class InscripciónController {
     private InscripciónDAO inscripciónDAO;
@@ -293,94 +460,73 @@ public class InscripciónController {
         }
     }
 
-    // Métodos para editar y eliminar inscripciones...
-}Controlador para Calificaciónimport java.util.Scanner;
+    public void actualizarInscripción() {
+        System.out.print("Ingrese el ID de la inscripción a actualizar: ");
+        int id = scanner.nextInt();
+        System.out.print("Ingrese el nuevo ID del estudiante: ");
+        int estudianteID = scanner.nextInt();
+        System.out.print("Ingrese el nuevo ID del curso: ");
+        int cursoID = scanner.nextInt();
+
+        try {
+            inscripciónDAO.actualizarInscripción(id, estudianteID, cursoID);
+            System.out.println("Inscripción actualizada exitosamente.");
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("Error al actualizar la inscripción.");
+        }
+    }
+
+    public void eliminarInscripción() {
+        System.out.print("Ingrese el ID de la inscripción a eliminar: ");
+        int id = scanner.nextInt();
+
+        try {
+            inscripciónDAO.eliminarInscripción(id);
+            System.out.println("Inscripción eliminada exitosamente.");
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("Error al eliminar la inscripción.");
+        }
+    }
+
+    public void listarInscripciones() {
+        try {
+            List<Inscripción> inscripciones = inscripciónDAO.listarInscripciones();
+            inscripciones.forEach(System.out::println);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("Error al listar las inscripciones.");
+        }
+    }
+
+    public void buscarInscripciónPorID() {
+        System.out.print("Ingrese el ID de la inscripción: ");
+        int id = scanner.nextInt();
+
+        try {
+            Inscripción inscripción = inscripciónDAO.buscarInscripciónPorID(id);
+            if (inscripción != null) {
+                System.out.println(inscripción);
+            } else {
+                System.out.println("Inscripción no encontrada.");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("Error al buscar la inscripción.");
+        }
+    }
+}
+```
+
+### 4. CalificaciónController
+
+```java
+import java.sql.SQLException;
+import java.util.List;
+import java.util.Scanner;
 
 public class CalificaciónController {
     private CalificaciónDAO calificaciónDAO;
     private Scanner scanner;
 
-    public CalificaciónController() {
-        calificaciónDAO = new CalificaciónDAO();
-        scanner = new Scanner(System.in);
-    }
-
-    public void crearCalificación() {
-        System.out.print("Ingrese el ID de la inscripción: ");
-        int inscripciónID = scanner.nextInt();
-        System.out.print("Ingrese la nota (0-100): ");
-        int nota = scanner.nextInt();
-        scanner.nextLine();  // Consumir la nueva línea
-        System.out.print("Ingrese la descripción de la calificación: ");
-        String descripción = scanner.nextLine();
-
-        try {
-            calificaciónDAO.crearCalificación(inscripciónID, nota, descripción);
-            System.out.println("Calificación creada exitosamente.");
-        } catch (SQLException e) {
-            e.printStackTrace();
-            System.out.println("Error al crear la calificación.");
-        }
-    }
-
-    // Métodos para editar calificaciones...
-}2. Interface para Doble Clave ForáneaPara manejar entidades con doble clave foránea, podemos usar una interfaz. Aquí un ejemplo simple.public interface IDobleClaveForanea {
-    int getEstudianteID();
-    int getCursoID();
-}Implementamos esta interfaz en Inscripción:public class Inscripción implements IDobleClaveForanea {
-    private int estudianteID;
-    private int cursoID;
-
-    // Constructor, getters y setters...
-
-    @Override
-    public int getEstudianteID() {
-        return estudianteID;
-    }
-
-    @Override
-    public int getCursoID() {
-        return cursoID;
-    }
-}3. Archivo Main para Ejecutar Todoimport java.util.Scanner;
-
-public class Main {
-    public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
-        EstudianteController estudianteController = new EstudianteController();
-        CursoController cursoController = new CursoController();
-        InscripciónController inscripciónController = new InscripciónController();
-        CalificaciónController calificaciónController = new CalificaciónController();
-
-        while (true) {
-            System.out.println("1. Crear Estudiante");
-            System.out.println("2. Crear Curso");
-            System.out.println("3. Crear Inscripción");
-            System.out.println("4. Crear Calificación");
-            System.out.println("5. Salir");
-            System.out.print("Seleccione una opción: ");
-            int opcion = scanner.nextInt();
-            scanner.nextLine(); // Consumir la nueva línea
-
-            switch (opcion) {
-                case 1:
-                    estudianteController.crearEstudiante();
-                    break;
-                case 2:
-                    cursoController.crearCurso();
-                    break;
-                case 3:
-                    inscripciónController.crearInscripción();
-                    break;
-                case 4:
-                    calificaciónController.crearCalificación();
-                    break;
-                case 5:
-                    System.out.println("Saliendo...");
-                    return;
-                default:
-                    System.out.println("Opción no válida. Intente nuevamente.");
-            }
-        }
-    }
-}
