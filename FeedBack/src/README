@@ -1,0 +1,207 @@
+Para desarrollar la base de datos y la aplicación para "Riwi Academy", podemos seguir los siguientes pasos:
+
+### 1. Diseño del Modelo Entidad-Relación (ERD)
+
+#### Entidades:
+1. **Estudiante**
+   - ID (PK)
+   - Nombre
+   - Apellido
+   - Email (único)
+   - Activo (booleano, por defecto true)
+
+2. **Curso**
+   - ID (PK)
+   - Nombre (único, case insensitive)
+   - Descripción
+
+3. **Inscripción**
+   - ID (PK)
+   - EstudianteID (FK -> Estudiante.ID, ON DELETE CASCADE)
+   - CursoID (FK -> Curso.ID, ON DELETE CASCADE)
+
+4. **Calificación**
+   - ID (PK)
+   - InscripciónID (FK -> Inscripción.ID, ON DELETE CASCADE)
+   - Nota (0-100)
+   - Descripción
+
+### 2. Creación de la Base de Datos
+
+#### Script SQL para MySQL:
+
+```sql
+-- Crear la base de datos
+CREATE DATABASE RiwiAcademyDB;
+
+USE RiwiAcademyDB;
+
+-- Crear tabla Estudiante
+CREATE TABLE Estudiante (
+    ID INT AUTO_INCREMENT PRIMARY KEY,
+    Nombre VARCHAR(255) NOT NULL,
+    Apellido VARCHAR(255) NOT NULL,
+    Email VARCHAR(255) NOT NULL UNIQUE,
+    Activo BOOLEAN DEFAULT TRUE,
+    CHECK (Email LIKE '%_@_%._%')
+);
+
+-- Crear tabla Curso
+CREATE TABLE Curso (
+    ID INT AUTO_INCREMENT PRIMARY KEY,
+    Nombre VARCHAR(255) NOT NULL,
+    Descripción TEXT,
+    CONSTRAINT unique_curso_nombre UNIQUE (LOWER(Nombre))
+);
+
+-- Crear tabla Inscripción
+CREATE TABLE Inscripción (
+    ID INT AUTO_INCREMENT PRIMARY KEY,
+    EstudianteID INT,
+    CursoID INT,
+    FOREIGN KEY (EstudianteID) REFERENCES Estudiante(ID) ON DELETE CASCADE,
+    FOREIGN KEY (CursoID) REFERENCES Curso(ID) ON DELETE CASCADE,
+    UNIQUE (EstudianteID, CursoID)
+);
+
+-- Crear tabla Calificación
+CREATE TABLE Calificación (
+    ID INT AUTO_INCREMENT PRIMARY KEY,
+    InscripciónID INT,
+    Nota INT CHECK (Nota >= 0 AND Nota <= 100),
+    Descripción TEXT,
+    FOREIGN KEY (InscripciónID) REFERENCES Inscripción(ID) ON DELETE CASCADE
+);
+```
+
+### 3. Archivo de Credenciales
+
+Crea un archivo `db_credentials.txt` con las siguientes credenciales (puedes ajustar según tu configuración):
+
+```
+host=localhost
+port=3306
+database=RiwiAcademyDB
+user=tu_usuario
+password=tu_contraseña
+```
+
+### 4. Desarrollo de la Aplicación en Java
+
+#### Conexión a la Base de Datos:
+
+```java
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+
+public class DatabaseConnection {
+    private static final String URL = "jdbc:mysql://localhost:3306/RiwiAcademyDB";
+    private static final String USER = "tu_usuario";
+    private static final String PASSWORD = "tu_contraseña";
+
+    public static Connection getConnection() throws SQLException {
+        return DriverManager.getConnection(URL, USER, PASSWORD);
+    }
+}
+```
+
+#### Implementación del Sistema de Gestión
+
+A continuación, algunos ejemplos de métodos en Java para gestionar las entidades.
+
+**Crear Estudiante:**
+
+```java
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+
+public class EstudianteDAO {
+
+    public void crearEstudiante(String nombre, String apellido, String email) throws SQLException {
+        String query = "INSERT INTO Estudiante (Nombre, Apellido, Email) VALUES (?, ?, ?)";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setString(1, nombre);
+            stmt.setString(2, apellido);
+            stmt.setString(3, email);
+            stmt.executeUpdate();
+        }
+    }
+
+    // Otros métodos para editar, listar y buscar estudiantes...
+}
+```
+
+**Crear Curso:**
+
+```java
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+
+public class CursoDAO {
+
+    public void crearCurso(String nombre, String descripcion) throws SQLException {
+        String query = "INSERT INTO Curso (Nombre, Descripción) VALUES (?, ?)";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setString(1, nombre);
+            stmt.setString(2, descripcion);
+            stmt.executeUpdate();
+        }
+    }
+
+    // Otros métodos para editar, listar y eliminar cursos...
+}
+```
+
+**Crear Inscripción:**
+
+```java
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+
+public class InscripciónDAO {
+
+    public void crearInscripción(int estudianteID, int cursoID) throws SQLException {
+        String query = "INSERT INTO Inscripción (EstudianteID, CursoID) VALUES (?, ?)";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setInt(1, estudianteID);
+            stmt.setInt(2, cursoID);
+            stmt.executeUpdate();
+        }
+    }
+
+    // Otros métodos para editar y eliminar inscripciones...
+}
+```
+
+**Crear Calificación:**
+
+```java
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+
+public class CalificaciónDAO {
+
+    public void crearCalificación(int inscripciónID, int nota, String descripción) throws SQLException {
+        String query = "INSERT INTO Calificación (InscripciónID, Nota, Descripción) VALUES (?, ?, ?)";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setInt(1, inscripciónID);
+            stmt.setInt(2, nota);
+            stmt.setString(3, descripción);
+            stmt.executeUpdate();
+        }
+    }
+
+    // Otros métodos para editar calificaciones...
+}
+```
+
+Con estos pasos, tendrás la base para desarrollar "Riwi Academy". Puedes ampliar los métodos para cubrir todos los criterios de aceptación y funcionalidades requeridas en las historias de usuario.
