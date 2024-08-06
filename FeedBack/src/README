@@ -1,95 +1,190 @@
-Para desarrollar la base de datos y la aplicación para "Riwi Academy", podemos seguir los siguientes pasos:
+Para abordar el desarrollo de la aplicación "Riwi Academy", aquí tienes una estructura básica dividida en varios archivos para mantener el código organizado:
 
-### 1. Diseño del Modelo Entidad-Relación (ERD)
+1. **Modelo de Entidad-Relación (ERD):**
+   Define las tablas y relaciones entre ellas.
 
-#### Entidades:
-1. **Estudiante**
-   - ID (PK)
-   - Nombre
-   - Apellido
-   - Email (único)
-   - Activo (booleano, por defecto true)
+2. **Clases del Modelo:**
+   Define las clases que representan cada entidad del modelo.
 
-2. **Curso**
-   - ID (PK)
-   - Nombre (único, case insensitive)
-   - Descripción
+3. **Controladores:**
+   Contiene la lógica para gestionar las operaciones CRUD (crear, leer, actualizar, eliminar) sobre las entidades.
 
-3. **Inscripción**
-   - ID (PK)
-   - EstudianteID (FK -> Estudiante.ID, ON DELETE CASCADE)
-   - CursoID (FK -> Curso.ID, ON DELETE CASCADE)
+4. **Conexión a la Base de Datos:**
+   Gestiona la conexión y desconexión a la base de datos.
 
-4. **Calificación**
-   - ID (PK)
-   - InscripciónID (FK -> Inscripción.ID, ON DELETE CASCADE)
-   - Nota (0-100)
-   - Descripción
+5. **CRUD:**
+   Implementa los métodos específicos para las operaciones CRUD.
 
-### 2. Creación de la Base de Datos
+6. **Main:**
+   Ejecuta la aplicación e interactúa con el usuario.
 
-#### Script SQL para MySQL:
-
+### Modelo de Entidad-Relación (ERD)
 ```sql
--- Crear la base de datos
 CREATE DATABASE RiwiAcademyDB;
 
 USE RiwiAcademyDB;
 
--- Crear tabla Estudiante
-CREATE TABLE Estudiante (
-    ID INT AUTO_INCREMENT PRIMARY KEY,
-    Nombre VARCHAR(255) NOT NULL,
-    Apellido VARCHAR(255) NOT NULL,
-    Email VARCHAR(255) NOT NULL UNIQUE,
-    Activo BOOLEAN DEFAULT TRUE,
-    CHECK (Email LIKE '%_@_%._%')
+CREATE TABLE Estudiantes (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NOT NULL UNIQUE,
+    activo BOOLEAN DEFAULT TRUE,
+    CHECK (email LIKE '%_@__%.__%')
 );
 
--- Crear tabla Curso
-CREATE TABLE Curso (
-    ID INT AUTO_INCREMENT PRIMARY KEY,
-    Nombre VARCHAR(255) NOT NULL,
-    Descripción TEXT,
-    CONSTRAINT unique_curso_nombre UNIQUE (LOWER(Nombre))
+CREATE TABLE Cursos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL UNIQUE,
+    descripcion TEXT
 );
 
--- Crear tabla Inscripción
-CREATE TABLE Inscripción (
-    ID INT AUTO_INCREMENT PRIMARY KEY,
-    EstudianteID INT,
-    CursoID INT,
-    FOREIGN KEY (EstudianteID) REFERENCES Estudiante(ID) ON DELETE CASCADE,
-    FOREIGN KEY (CursoID) REFERENCES Curso(ID) ON DELETE CASCADE,
-    UNIQUE (EstudianteID, CursoID)
+CREATE TABLE Inscripciones (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    estudiante_id INT,
+    curso_id INT,
+    FOREIGN KEY (estudiante_id) REFERENCES Estudiantes(id) ON DELETE CASCADE,
+    FOREIGN KEY (curso_id) REFERENCES Cursos(id) ON DELETE CASCADE,
+    UNIQUE (estudiante_id, curso_id)
 );
 
--- Crear tabla Calificación
-CREATE TABLE Calificación (
-    ID INT AUTO_INCREMENT PRIMARY KEY,
-    InscripciónID INT,
-    Nota INT CHECK (Nota >= 0 AND Nota <= 100),
-    Descripción TEXT,
-    FOREIGN KEY (InscripciónID) REFERENCES Inscripción(ID) ON DELETE CASCADE
+CREATE TABLE Calificaciones (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    inscripcion_id INT,
+    calificacion FLOAT CHECK (calificacion BETWEEN 0 AND 100),
+    descripcion VARCHAR(255),
+    FOREIGN KEY (inscripcion_id) REFERENCES Inscripciones(id) ON DELETE CASCADE
 );
 ```
 
-### 3. Archivo de Credenciales
+### Clases del Modelo
+**Estudiante.java**
+```java
+public class Estudiante {
+    private int id;
+    private String nombre;
+    private String email;
+    private boolean activo;
 
-Crea un archivo `db_credentials.txt` con las siguientes credenciales (puedes ajustar según tu configuración):
-
+    // Getters y setters
+}
 ```
-host=localhost
-port=3306
-database=RiwiAcademyDB
-user=tu_usuario
-password=tu_contraseña
+
+**Curso.java**
+```java
+public class Curso {
+    private int id;
+    private String nombre;
+    private String descripcion;
+
+    // Getters y setters
+}
 ```
 
-### 4. Desarrollo de la Aplicación en Java
+**Inscripcion.java**
+```java
+public class Inscripcion {
+    private int id;
+    private int estudianteId;
+    private int cursoId;
 
-#### Conexión a la Base de Datos:
+    // Getters y setters
+}
+```
 
+**Calificacion.java**
+```java
+public class Calificacion {
+    private int id;
+    private int inscripcionId;
+    private float calificacion;
+    private String descripcion;
+
+    // Getters y setters
+}
+```
+
+### Controladores
+**EstudianteController.java**
+```java
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+
+public class EstudianteController {
+    private Connection connection;
+
+    public EstudianteController(Connection connection) {
+        this.connection = connection;
+    }
+
+    public void crearEstudiante(Estudiante estudiante) throws SQLException {
+        String query = "INSERT INTO Estudiantes (nombre, email, activo) VALUES (?, ?, ?)";
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setString(1, estudiante.getNombre());
+            stmt.setString(2, estudiante.getEmail());
+            stmt.setBoolean(3, estudiante.isActivo());
+            stmt.executeUpdate();
+        }
+    }
+
+    public List<Estudiante> listarEstudiantesActivos() throws SQLException {
+        String query = "SELECT * FROM Estudiantes WHERE activo = TRUE";
+        List<Estudiante> estudiantes = new ArrayList<>();
+        try (Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery(query)) {
+            while (rs.next()) {
+                Estudiante estudiante = new Estudiante();
+                estudiante.setId(rs.getInt("id"));
+                estudiante.setNombre(rs.getString("nombre"));
+                estudiante.setEmail(rs.getString("email"));
+                estudiante.setActivo(rs.getBoolean("activo"));
+                estudiantes.add(estudiante);
+            }
+        }
+        return estudiantes;
+    }
+
+    public Estudiante buscarEstudiantePorId(int id) throws SQLException {
+        String query = "SELECT * FROM Estudiantes WHERE id = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setInt(1, id);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    Estudiante estudiante = new Estudiante();
+                    estudiante.setId(rs.getInt("id"));
+                    estudiante.setNombre(rs.getString("nombre"));
+                    estudiante.setEmail(rs.getString("email"));
+                    estudiante.setActivo(rs.getBoolean("activo"));
+                    return estudiante;
+                }
+            }
+        }
+        return null;
+    }
+
+    public void actualizarEstudiante(Estudiante estudiante) throws SQLException {
+        String query = "UPDATE Estudiantes SET nombre = ?, email = ?, activo = ? WHERE id = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setString(1, estudiante.getNombre());
+            stmt.setString(2, estudiante.getEmail());
+            stmt.setBoolean(3, estudiante.isActivo());
+            stmt.setInt(4, estudiante.getId());
+            stmt.executeUpdate();
+        }
+    }
+
+    public void eliminarEstudiante(int id) throws SQLException {
+        String query = "DELETE FROM Estudiantes WHERE id = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setInt(1, id);
+            stmt.executeUpdate();
+        }
+    }
+}
+```
+
+### Conexión a la Base de Datos
+**DatabaseConnection.java**
 ```java
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -97,499 +192,107 @@ import java.sql.SQLException;
 
 public class DatabaseConnection {
     private static final String URL = "jdbc:mysql://localhost:3306/RiwiAcademyDB";
-    private static final String USER = "tu_usuario";
-    private static final String PASSWORD = "tu_contraseña";
+    private static final String USER = "root";
+    private static final String PASSWORD = "password";
 
     public static Connection getConnection() throws SQLException {
         return DriverManager.getConnection(URL, USER, PASSWORD);
     }
+
+    public static void closeConnection(Connection connection) throws SQLException {
+        if (connection != null && !connection.isClosed()) {
+            connection.close();
+        }
+    }
 }
 ```
 
-#### Implementación del Sistema de Gestión
+### CRUD
+Los métodos CRUD se implementan en los controladores, como se muestra en el `EstudianteController`.
 
-A continuación, algunos ejemplos de métodos en Java para gestionar las entidades.
-
-**Crear Estudiante:**
-
+### Main
+**Main.java**
 ```java
 import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-
-public class EstudianteDAO {
-
-    public void crearEstudiante(String nombre, String apellido, String email) throws SQLException {
-        String query = "INSERT INTO Estudiante (Nombre, Apellido, Email) VALUES (?, ?, ?)";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
-            stmt.setString(1, nombre);
-            stmt.setString(2, apellido);
-            stmt.setString(3, email);
-            stmt.executeUpdate();
-        }
-    }
-
-    // Otros métodos para editar, listar y buscar estudiantes...
-}
-```
-
-**Crear Curso:**
-
-```java
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-
-public class CursoDAO {
-
-    public void crearCurso(String nombre, String descripcion) throws SQLException {
-        String query = "INSERT INTO Curso (Nombre, Descripción) VALUES (?, ?)";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
-            stmt.setString(1, nombre);
-            stmt.setString(2, descripcion);
-            stmt.executeUpdate();
-        }
-    }
-
-    // Otros métodos para editar, listar y eliminar cursos...
-}
-```
-
-**Crear Inscripción:**
-
-```java
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-
-public class InscripciónDAO {
-
-    public void crearInscripción(int estudianteID, int cursoID) throws SQLException {
-        String query = "INSERT INTO Inscripción (EstudianteID, CursoID) VALUES (?, ?)";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
-            stmt.setInt(1, estudianteID);
-            stmt.setInt(2, cursoID);
-            stmt.executeUpdate();
-        }
-    }
-
-    // Otros métodos para editar y eliminar inscripciones...
-}
-```
-
-**Crear Calificación:**
-
-```java
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-
-public class CalificaciónDAO {
-
-    public void crearCalificación(int inscripciónID, int nota, String descripción) throws SQLException {
-        String query = "INSERT INTO Calificación (InscripciónID, Nota, Descripción) VALUES (?, ?, ?)";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
-            stmt.setInt(1, inscripciónID);
-            stmt.setInt(2, nota);
-            stmt.setString(3, descripción);
-            stmt.executeUpdate();
-        }
-    }
-
-    // Otros métodos para editar calificaciones...
-}
-```
-
-Con estos pasos, tendrás la base para desarrollar "Riwi Academy". Puedes ampliar los métodos para cubrir todos los criterios de aceptación y funcionalidades requeridas en las historias de usuario.
-
-
-Claro, a continuación se detallan los métodos para cada controlador, incluyendo las funcionalidades de crear, actualizar, consultar, eliminar y realizar consultas generales.
-
-### 1. EstudianteController
-
-```java
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Scanner;
-
-public class EstudianteController {
-    private EstudianteDAO estudianteDAO;
-    private Scanner scanner;
-
-    public EstudianteController() {
-        estudianteDAO = new EstudianteDAO();
-        scanner = new Scanner(System.in);
-    }
-
-    public void crearEstudiante() {
-        System.out.print("Ingrese el nombre: ");
-        String nombre = scanner.nextLine();
-        System.out.print("Ingrese el apellido: ");
-        String apellido = scanner.nextLine();
-        System.out.print("Ingrese el email: ");
-        String email = scanner.nextLine();
-
-        try {
-            estudianteDAO.crearEstudiante(nombre, apellido, email);
-            System.out.println("Estudiante creado exitosamente.");
-        } catch (SQLException e) {
-            e.printStackTrace();
-            System.out.println("Error al crear el estudiante.");
-        }
-    }
-
-    public void actualizarEstudiante() {
-        System.out.print("Ingrese el ID del estudiante a actualizar: ");
-        int id = scanner.nextInt();
-        scanner.nextLine(); // Consumir la nueva línea
-        System.out.print("Ingrese el nuevo nombre (dejar vacío para no cambiar): ");
-        String nombre = scanner.nextLine();
-        System.out.print("Ingrese el nuevo apellido (dejar vacío para no cambiar): ");
-        String apellido = scanner.nextLine();
-        System.out.print("Ingrese el nuevo email (dejar vacío para no cambiar): ");
-        String email = scanner.nextLine();
-
-        try {
-            estudianteDAO.actualizarEstudiante(id, nombre, apellido, email);
-            System.out.println("Estudiante actualizado exitosamente.");
-        } catch (SQLException e) {
-            e.printStackTrace();
-            System.out.println("Error al actualizar el estudiante.");
-        }
-    }
-
-    public void eliminarEstudiante() {
-        System.out.print("Ingrese el ID del estudiante a eliminar: ");
-        int id = scanner.nextInt();
-
-        try {
-            estudianteDAO.eliminarEstudiante(id);
-            System.out.println("Estudiante eliminado exitosamente.");
-        } catch (SQLException e) {
-            e.printStackTrace();
-            System.out.println("Error al eliminar el estudiante.");
-        }
-    }
-
-    public void listarEstudiantesActivos() {
-        try {
-            List<Estudiante> estudiantes = estudianteDAO.listarEstudiantesActivos();
-            estudiantes.forEach(System.out::println);
-        } catch (SQLException e) {
-            e.printStackTrace();
-            System.out.println("Error al listar los estudiantes.");
-        }
-    }
-
-    public void buscarEstudiantePorID() {
-        System.out.print("Ingrese el ID del estudiante: ");
-        int id = scanner.nextInt();
-
-        try {
-            Estudiante estudiante = estudianteDAO.buscarEstudiantePorID(id);
-            if (estudiante != null) {
-                System.out.println(estudiante);
-            } else {
-                System.out.println("Estudiante no encontrado.");
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            System.out.println("Error al buscar el estudiante.");
-        }
-    }
-
-    public void buscarEstudiantePorEmail() {
-        System.out.print("Ingrese el email del estudiante: ");
-        String email = scanner.nextLine();
-
-        try {
-            Estudiante estudiante = estudianteDAO.buscarEstudiantePorEmail(email);
-            if (estudiante != null) {
-                System.out.println(estudiante);
-            } else {
-                System.out.println("Estudiante no encontrado.");
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            System.out.println("Error al buscar el estudiante.");
-        }
-    }
-}
-```
-
-### 2. CursoController
-
-```java
-import java.sql.SQLException;
-import java.util.List;
-import java.util.Scanner;
-
-public class CursoController {
-    private CursoDAO cursoDAO;
-    private Scanner scanner;
-
-    public CursoController() {
-        cursoDAO = new CursoDAO();
-        scanner = new Scanner(System.in);
-    }
-
-    public void crearCurso() {
-        System.out.print("Ingrese el nombre del curso: ");
-        String nombre = scanner.nextLine();
-        System.out.print("Ingrese la descripción del curso: ");
-        String descripcion = scanner.nextLine();
-
-        try {
-            cursoDAO.crearCurso(nombre, descripcion);
-            System.out.println("Curso creado exitosamente.");
-        } catch (SQLException e) {
-            e.printStackTrace();
-            System.out.println("Error al crear el curso.");
-        }
-    }
-
-    public void actualizarCurso() {
-        System.out.print("Ingrese el ID del curso a actualizar: ");
-        int id = scanner.nextInt();
-        scanner.nextLine(); // Consumir la nueva línea
-        System.out.print("Ingrese el nuevo nombre (dejar vacío para no cambiar): ");
-        String nombre = scanner.nextLine();
-        System.out.print("Ingrese la nueva descripción (dejar vacío para no cambiar): ");
-        String descripcion = scanner.nextLine();
-
-        try {
-            cursoDAO.actualizarCurso(id, nombre, descripcion);
-            System.out.println("Curso actualizado exitosamente.");
-        } catch (SQLException e) {
-            e.printStackTrace();
-            System.out.println("Error al actualizar el curso.");
-        }
-    }
-
-    public void eliminarCurso() {
-        System.out.print("Ingrese el ID del curso a eliminar: ");
-        int id = scanner.nextInt();
-
-        try {
-            cursoDAO.eliminarCurso(id);
-            System.out.println("Curso eliminado exitosamente.");
-        } catch (SQLException e) {
-            e.printStackTrace();
-            System.out.println("Error al eliminar el curso.");
-        }
-    }
-
-    public void listarCursos() {
-        try {
-            List<Curso> cursos = cursoDAO.listarCursos();
-            cursos.forEach(System.out::println);
-        } catch (SQLException e) {
-            e.printStackTrace();
-            System.out.println("Error al listar los cursos.");
-        }
-    }
-
-    public void buscarCursoPorID() {
-        System.out.print("Ingrese el ID del curso: ");
-        int id = scanner.nextInt();
-
-        try {
-            Curso curso = cursoDAO.buscarCursoPorID(id);
-            if (curso != null) {
-                System.out.println(curso);
-            } else {
-                System.out.println("Curso no encontrado.");
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            System.out.println("Error al buscar el curso.");
-        }
-    }
-
-    public void buscarCursoPorNombre() {
-        System.out.print("Ingrese el nombre del curso: ");
-        String nombre = scanner.nextLine();
-
-        try {
-            Curso curso = cursoDAO.buscarCursoPorNombre(nombre);
-            if (curso != null) {
-                System.out.println(curso);
-            } else {
-                System.out.println("Curso no encontrado.");
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            System.out.println("Error al buscar el curso.");
-        }
-    }
-}
-```
-
-### 3. InscripciónController
-
-```java
-import java.sql.SQLException;
-import java.util.List;
-import java.util.Scanner;
-
-public class InscripciónController {
-    private InscripciónDAO inscripciónDAO;
-    private Scanner scanner;
-
-    public InscripciónController() {
-        inscripciónDAO = new InscripciónDAO();
-        scanner = new Scanner(System.in);
-    }
-
-    public void crearInscripción() {
-        System.out.print("Ingrese el ID del estudiante: ");
-        int estudianteID = scanner.nextInt();
-        System.out.print("Ingrese el ID del curso: ");
-        int cursoID = scanner.nextInt();
-
-        try {
-            inscripciónDAO.crearInscripción(estudianteID, cursoID);
-            System.out.println("Inscripción creada exitosamente.");
-        } catch (SQLException e) {
-            e.printStackTrace();
-            System.out.println("Error al crear la inscripción.");
-        }
-    }
-
-    public void actualizarInscripción() {
-        System.out.print("Ingrese el ID de la inscripción a actualizar: ");
-        int id = scanner.nextInt();
-        System.out.print("Ingrese el nuevo ID del estudiante: ");
-        int estudianteID = scanner.nextInt();
-        System.out.print("Ingrese el nuevo ID del curso: ");
-        int cursoID = scanner.nextInt();
-
-        try {
-            inscripciónDAO.actualizarInscripción(id, estudianteID, cursoID);
-            System.out.println("Inscripción actualizada exitosamente.");
-        } catch (SQLException e) {
-            e.printStackTrace();
-            System.out.println("Error al actualizar la inscripción.");
-        }
-    }
-
-    public void eliminarInscripción() {
-        System.out.print("Ingrese el ID de la inscripción a eliminar: ");
-        int id = scanner.nextInt();
-
-        try {
-            inscripciónDAO.eliminarInscripción(id);
-            System.out.println("Inscripción eliminada exitosamente.");
-        } catch (SQLException e) {
-            e.printStackTrace();
-            System.out.println("Error al eliminar la inscripción.");
-        }
-    }
-
-    public void listarInscripciones() {
-        try {
-            List<Inscripción> inscripciones = inscripciónDAO.listarInscripciones();
-            inscripciones.forEach(System.out::println);
-        } catch (SQLException e) {
-            e.printStackTrace();
-            System.out.println("Error al listar las inscripciones.");
-        }
-    }
-
-    public void buscarInscripciónPorID() {
-        System.out.print("Ingrese el ID de la inscripción: ");
-        int id = scanner.nextInt();
-
-        try {
-            Inscripción inscripción = inscripciónDAO.buscarInscripciónPorID(id);
-            if (inscripción != null) {
-                System.out.println(inscripción);
-            } else {
-                System.out.println("Inscripción no encontrada.");
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            System.out.println("Error al buscar la inscripción.");
-        }
-    }
-}
-```
-
-### 4. CalificaciónController
-
-```java
-import java.sql.SQLException;
-import java.util.List;
-import java.util.Scanner;
-
-public class CalificaciónController {
-    private CalificaciónDAO calificaciónDAO;
-    private Scanner scanner;
-
-
-
-
-2. Interface para Doble Clave ForáneaPara manejar entidades con doble clave foránea, podemos usar una interfaz. Aquí un ejemplo simple.public interface IDobleClaveForanea {
-    int getEstudianteID();
-    int getCursoID();
-}Implementamos esta interfaz en Inscripción:public class Inscripción implements IDobleClaveForanea {
-    private int estudianteID;
-    private int cursoID;
-
-    // Constructor, getters y setters...
-
-    @Override
-    public int getEstudianteID() {
-        return estudianteID;
-    }
-
-    @Override
-    public int getCursoID() {
-        return cursoID;
-    }
-}3. Archivo Main para Ejecutar Todoimport java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
-        EstudianteController estudianteController = new EstudianteController();
-        CursoController cursoController = new CursoController();
-        InscripciónController inscripciónController = new InscripciónController();
-        CalificaciónController calificaciónController = new CalificaciónController();
+        try (Connection connection = DatabaseConnection.getConnection()) {
+            EstudianteController estudianteController = new EstudianteController(connection);
+            Scanner scanner = new Scanner(System.in);
 
-        while (true) {
-            System.out.println("1. Crear Estudiante");
-            System.out.println("2. Crear Curso");
-            System.out.println("3. Crear Inscripción");
-            System.out.println("4. Crear Calificación");
-            System.out.println("5. Salir");
-            System.out.print("Seleccione una opción: ");
-            int opcion = scanner.nextInt();
-            scanner.nextLine(); // Consumir la nueva línea
+            while (true) {
+                System.out.println("1. Crear estudiante");
+                System.out.println("2. Listar estudiantes activos");
+                System.out.println("3. Buscar estudiante por ID");
+                System.out.println("4. Actualizar estudiante");
+                System.out.println("5. Eliminar estudiante");
+                System.out.println("6. Salir");
+                int choice = scanner.nextInt();
 
-            switch (opcion) {
-                case 1:
-                    estudianteController.crearEstudiante();
-                    break;
-                case 2:
-                    cursoController.crearCurso();
-                    break;
-                case 3:
-                    inscripciónController.crearInscripción();
-                    break;
-                case 4:
-                    calificaciónController.crearCalificación();
-                    break;
-                case 5:
-                    System.out.println("Saliendo...");
-                    return;
-                default:
-                    System.out.println("Opción no válida. Intente nuevamente.");
+                switch (choice) {
+                    case 1:
+                        System.out.println("Nombre:");
+                        String nombre = scanner.next();
+                        System.out.println("Email:");
+                        String email = scanner.next();
+                        Estudiante estudiante = new Estudiante();
+                        estudiante.setNombre(nombre);
+                        estudiante.setEmail(email);
+                        estudiante.setActivo(true);
+                        estudianteController.crearEstudiante(estudiante);
+                        break;
+                    case 2:
+                        List<Estudiante> estudiantes = estudianteController.listarEstudiantesActivos();
+                        for (Estudiante e : estudiantes) {
+                            System.out.println(e.getId() + ": " + e.getNombre() + " - " + e.getEmail());
+                        }
+                        break;
+                    case 3:
+                        System.out.println("ID del estudiante:");
+                        int id = scanner.nextInt();
+                        Estudiante e = estudianteController.buscarEstudiantePorId(id);
+                        if (e != null) {
+                            System.out.println(e.getId() + ": " + e.getNombre() + " - " + e.getEmail());
+                        } else {
+                            System.out.println("Estudiante no encontrado");
+                        }
+                        break;
+                    case 4:
+                        System.out.println("ID del estudiante a actualizar:");
+                        int updateId = scanner.nextInt();
+                        Estudiante updateEstudiante = estudianteController.buscarEstudiantePorId(updateId);
+                        if (updateEstudiante != null) {
+                            System.out.println("Nuevo nombre (actual: " + updateEstudiante.getNombre() + "):");
+                            String newName = scanner.next();
+                            System.out.println("Nuevo email (actual: " + updateEstudiante.getEmail() + "):");
+                            String newEmail = scanner.next();
+                            updateEstudiante.setNombre(newName);
+                            updateEstudiante.setEmail(newEmail);
+                            estudianteController.actualizarEstudiante(updateEstudiante);
+                        } else {
+                            System.out.println("Estudiante no encontrado");
+                        }
+                        break;
+                    case 5:
+                        System.out.println("ID del estudiante a eliminar:");
+                        int deleteId = scanner.nextInt();
+                        estudianteController.eliminarEstudiante(deleteId);
+                        break;
+                    case 6:
+                        return;
+                    default:
+                        System.out.println("Opción no válida");
+                        break;
+                }
             }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
 }
+```
+
+Este es un esqueleto básico para la implementación de "Riwi Academy". Deberás implementar clases y controladores similares para los cursos, inscripciones y calificaciones, siguiendo el mismo patrón.
